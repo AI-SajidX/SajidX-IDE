@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,20 +7,40 @@ export default function Home() {
   const [language, setLanguage] = useState("cpp");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(`#include <iostream>
+using namespace std;
 
-  
-const handleRun = async () => {
-  try {
-    const response = await fetch("http://localhost:5000/api/test");
-    const data = await response.json();
+int main() {
+    cout << "Hello SajidX IDE!";
+    return 0;
+}`);
+  const handleRun = async () => {
+    try {
+      setOutput("Compiling your code...");
 
-    setOutput(data.message);
-  } catch (error) {
-    setOutput("Backend connection failed!");
-  }
-};
+      const response = await fetch("http://localhost:5000/api/compile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          input,
+        }),
+      });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Compilation failed");
+      }
+
+      setOutput(`Status: ${data.status}\n\n${data.output || "No output"}`);
+    } catch (error) {
+      setOutput(`Error: ${error.message}`);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#0d1117] p-6">
@@ -30,9 +49,7 @@ const handleRun = async () => {
       </h1>
 
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white">
-          Code Editor
-        </h2>
+        <h2 className="text-lg font-semibold text-white">Code Editor</h2>
 
         <select
           value={language}
@@ -43,9 +60,9 @@ const handleRun = async () => {
           <option value="cpp">C++</option>
         </select>
       </div>
-
       <CodeEditor
         language={language}
+        code={code}
         onChange={(value) => setCode(value || "")}
       />
 
