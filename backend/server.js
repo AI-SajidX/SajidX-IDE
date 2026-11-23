@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -7,10 +8,12 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "20kb" }));
 
+// Home Route
 app.get("/", (req, res) => {
   res.send("SajidX IDE Backend is Running!");
 });
 
+// Test Route
 app.get("/api/test", (req, res) => {
   res.json({
     success: true,
@@ -22,19 +25,24 @@ app.get("/api/test", (req, res) => {
 app.post("/api/compile", async (req, res) => {
   try {
     const { code, language, input } = req.body;
-    console.log("Received Data:", req.body);
-    console.log("Code:", code);
-    console.log("Language:", language);
 
-    if (!code || !["c", "cpp"].includes(language)) {
+    console.log("Received:", { language });
+
+    // Validate Input
+    if (
+      typeof code !== "string" ||
+      !code.trim() ||
+      !["c", "cpp"].includes(language)
+    ) {
       return res.status(400).json({
         error: "Invalid code or language",
       });
     }
 
+    // Judge0 Language IDs
     const languageId = language === "c" ? 50 : 54;
 
-    // Submit code to Judge0
+    // Submit Code to Judge0
     const submission = await fetch(
       "https://ce.judge0.com/submissions?base64_encoded=false&wait=false",
       {
@@ -50,56 +58,92 @@ app.post("/api/compile", async (req, res) => {
           memory_limit: 128000,
           enable_network: false,
         }),
-      },
+      }
     );
 
     if (!submission.ok) {
-      throw new Error("Judge0 submission failed");
+      const details = await submission.text();
+
+      console.error("Submission Error:", {
+        status: submission.status,
+        details,
+      });
+
+      throw new Error(
+        `Judge0 submission failed: HTTP ${submission.status}`
+      );
     }
 
     const { token } = await submission.json();
 
-    // Check execution result
-    for (let i = 0; i < 20; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const resultResponse = await fetch(
-        `https://ce.judge0.com/submissions/${token}?base64_encoded=false`,
-      );
-
-      if (!resultResponse.ok) {
-        throw new Error("Could not get execution result");
-      }
-
-      const result = await resultResponse.json();
-
-      if (result.status.id > 2) {
-        return res.json({
-          output:
-            result.stdout ||
-            result.compile_output ||
-            result.stderr ||
-            result.message ||
-            result.status.description,
-          status: result.status.description,
-          time: result.time,
-        });
-      }
+    if (!token) {
+      throw new Error("Judge0 did not return a token");
     }
 
-    return res.json({
-      output: "Execution is taking too long. Please try again.",
-      status: "Processing",
-    });
-  } catch (error) {
-    console.error(error);
+    // Poll Execution Result
+    for (let i = 0; i < 25; i++) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000)
+      );
 
-    res.status(500).json({
-      error: "Compiler service failed. Please try again.",
+      const resultResponse = await fetch(
+        `https://ce.judge0.com/submissions/${token}?base64_encoded=false`
+      );
+
+      console.log(
+        "Judge0 HTTP Status:",
+        resultResponse.status
+      );
+
+      const responseText = await resultResponse.text();
+
+      console.log("Judge0 Raw Response:", responseText);
+
+      if (!resultResponse.ok) {
+        throw new Error(
+          `Judge0 result failed: HTTP ${resultResponse.status} - ${responseText}`
+        );
+      }
+
+      const result = JSON.parse(responseText);
+
+      // 1 = In Queue, 2 = Processing
+      if (result.status.id <= 2) {
+        continue;
+      }
+
+      // Get Compiler / Runtime Output
+      const output =
+        result.compile_output ||
+        result.stderr ||
+        result.stdout ||
+        result.message ||
+        result.status.description;
+
+      return res.json({
+        success: result.status.id === 3,
+        output: output || "No output",
+        status: result.status.description,
+        time: result.time,
+        memory: result.memory,
+      });
+    }
+
+    // Timeout
+    return res.status(504).json({
+      error: "Execution timeout. Please try again.",
+    });
+
+  } catch (error) {
+    console.error("Compiler Error:", error);
+
+    return res.status(500).json({
+      error: error.message || "Compiler service failed",
     });
   }
 });
 
+// Start Server
 const PORT = 5000;
 
 app.listen(PORT, () => {
