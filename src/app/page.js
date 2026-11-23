@@ -10,9 +10,18 @@ export default function Home() {
   const [output, setOutput] = useState("");
   const [code, setCode] = useState("");
 
-  const handleRun = () => {
-    setOutput("Compiler API is not connected yet!");
-  };
+  
+const handleRun = async () => {
+  try {
+    const response = await fetch("http://localhost:5000/api/test");
+    const data = await response.json();
+
+    setOutput(data.message);
+  } catch (error) {
+    setOutput("Backend connection failed!");
+  }
+};
+
 
   return (
     <main className="min-h-screen bg-[#0d1117] p-6">
