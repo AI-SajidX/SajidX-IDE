@@ -1,8 +1,9 @@
+
 "use client";
 
 import Editor from "@monaco-editor/react";
 
-const CodeEditor = ({ language = "cpp" }) => {
+const CodeEditor = ({ language = "cpp", onChange }) => {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-700">
       <Editor
@@ -16,6 +17,7 @@ int main() {
     cout << "Hello SajidX IDE!";
     return 0;
 }`}
+        onChange={onChange}
         options={{
           fontSize: 15,
           minimap: { enabled: false },
