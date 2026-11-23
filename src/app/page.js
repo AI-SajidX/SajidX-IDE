@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -84,7 +83,7 @@ export default function Home() {
   // Toggle Theme
   const handleThemeChange = () => {
     setTheme((previousTheme) =>
-      previousTheme === "vs-dark" ? "light" : "vs-dark"
+      previousTheme === "vs-dark" ? "light" : "vs-dark",
     );
   };
 
@@ -99,7 +98,7 @@ export default function Home() {
       setMemory("");
 
       const response = await fetch(
-        "http://localhost:5000/api/compile",
+        "https://sajidx-ide-backend.onrender.com/api/compile",
         {
           method: "POST",
           headers: {
@@ -110,7 +109,7 @@ export default function Home() {
             language,
             input,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -124,7 +123,6 @@ export default function Home() {
       setMemory(data.memory ?? "");
 
       setOutput(data.output || "No output");
-
     } catch (error) {
       setStatus("Error");
       setExecutionTime("");
@@ -140,27 +138,26 @@ export default function Home() {
     status === "Accepted"
       ? "text-green-400"
       : status === "Compilation Error"
-      ? "text-red-400"
-      : status?.includes("Runtime Error")
-      ? "text-yellow-400"
-      : status === "Error"
-      ? "text-red-400"
-      : "text-gray-400";
+        ? "text-red-400"
+        : status?.includes("Runtime Error")
+          ? "text-yellow-400"
+          : status === "Error"
+            ? "text-red-400"
+            : "text-gray-400";
 
   const statusBg =
     status === "Accepted"
       ? "bg-green-500/10 border-green-500/30"
       : status === "Compilation Error"
-      ? "bg-red-500/10 border-red-500/30"
-      : status?.includes("Runtime Error")
-      ? "bg-yellow-500/10 border-yellow-500/30"
-      : status === "Error"
-      ? "bg-red-500/10 border-red-500/30"
-      : "bg-gray-500/10 border-gray-500/30";
+        ? "bg-red-500/10 border-red-500/30"
+        : status?.includes("Runtime Error")
+          ? "bg-yellow-500/10 border-yellow-500/30"
+          : status === "Error"
+            ? "bg-red-500/10 border-red-500/30"
+            : "bg-gray-500/10 border-gray-500/30";
 
   return (
     <main className="min-h-screen bg-[#0d1117] p-3 sm:p-6">
-
       {/* Header */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -168,9 +165,7 @@ export default function Home() {
             SajidX <span className="text-green-500">IDE</span>
           </h1>
 
-          <p className="mt-1 text-sm text-gray-400">
-            Code. Compile. Create.
-          </p>
+          <p className="mt-1 text-sm text-gray-400">Code. Compile. Create.</p>
         </div>
 
         <span className="rounded-full border border-green-500/30 bg-green-500/10 px-3 py-2 text-xs text-green-400 sm:text-sm">
@@ -180,13 +175,9 @@ export default function Home() {
 
       {/* Editor Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-
-        <h2 className="text-lg font-semibold text-white">
-          Code Editor
-        </h2>
+        <h2 className="text-lg font-semibold text-white">Code Editor</h2>
 
         <div className="flex flex-wrap gap-2">
-
           {/* Language Selector */}
           <select
             value={language}
@@ -212,7 +203,6 @@ export default function Home() {
           >
             {copied ? "✓ Copied" : "Copy Code"}
           </button>
-
         </div>
       </div>
 
@@ -223,14 +213,11 @@ export default function Home() {
         onChange={(value) => setCode(value || "")}
         theme={theme}
         isFullscreen={isFullscreen}
-        onToggleFullscreen={() =>
-          setIsFullscreen((previous) => !previous)
-        }
+        onToggleFullscreen={() => setIsFullscreen((previous) => !previous)}
       />
 
       {/* Action Buttons */}
       <div className="mt-4 flex flex-wrap gap-3">
-
         <button
           onClick={handleRun}
           disabled={loading}
@@ -253,17 +240,13 @@ export default function Home() {
         >
           Clear Output
         </button>
-
       </div>
 
       {/* Input and Output */}
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-
         {/* Custom Input */}
         <div>
-          <h2 className="mb-3 font-semibold text-white">
-            Custom Input
-          </h2>
+          <h2 className="mb-3 font-semibold text-white">Custom Input</h2>
 
           <textarea
             value={input}
@@ -276,9 +259,7 @@ export default function Home() {
         {/* Output */}
         <div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-semibold text-white">
-              Output
-            </h2>
+            <h2 className="font-semibold text-white">Output</h2>
 
             {status && (
               <span
@@ -296,32 +277,30 @@ export default function Home() {
           {/* Execution Information */}
           {(executionTime || memory !== "") && (
             <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-400">
-
               {executionTime && (
                 <p>
-                  <span className="text-gray-200">Time:</span>{" "}
-                  {executionTime}s
+                  <span className="text-gray-200">Time:</span> {executionTime}s
                 </p>
               )}
 
               {memory !== "" && memory !== null && (
                 <p>
-                  <span className="text-gray-200">Memory:</span>{" "}
-                  {memory} KB
+                  <span className="text-gray-200">Memory:</span> {memory} KB
                 </p>
               )}
-
             </div>
           )}
         </div>
-
       </div>
 
       {/* Footer */}
       <footer className="mt-12 border-t border-gray-800 pt-5 text-center text-sm text-gray-500">
         An Online C / C++ Compiler by AI-SajidX
+        <p className="mt-2 text-xs text-gray-400">
+          A Product of{" "}
+          <span className="font-semibold text-green-500">ZEPHTIX IT</span>
+        </p>
       </footer>
-
     </main>
   );
 }
