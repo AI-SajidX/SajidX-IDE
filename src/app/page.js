@@ -33,34 +33,59 @@ export default function Home() {
   const [executionTime, setExecutionTime] = useState("");
   const [memory, setMemory] = useState("");
 
-  // Change Programming Language
+  // New Features
+  const [theme, setTheme] = useState("vs-dark");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Clear Previous Results
+  const clearResults = () => {
+    setOutput("");
+    setStatus("");
+    setExecutionTime("");
+    setMemory("");
+  };
+
+  // Change Language
   const handleLanguageChange = (e) => {
     const selectedLanguage = e.target.value;
 
     setLanguage(selectedLanguage);
     setCode(defaultCodes[selectedLanguage]);
-    setOutput("");
-    setStatus("");
-    setExecutionTime("");
-    setMemory("");
+    clearResults();
   };
 
   // Clear Output
   const handleClearOutput = () => {
-    setOutput("");
-    setStatus("");
-    setExecutionTime("");
-    setMemory("");
+    clearResults();
   };
 
   // Reset Code
   const handleResetCode = () => {
     setCode(defaultCodes[language]);
-    setOutput("");
     setInput("");
-    setStatus("");
-    setExecutionTime("");
-    setMemory("");
+    clearResults();
+  };
+
+  // Copy Code
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      setOutput("Unable to copy code. Please try again.");
+    }
+  };
+
+  // Toggle Theme
+  const handleThemeChange = () => {
+    setTheme((previousTheme) =>
+      previousTheme === "vs-dark" ? "light" : "vs-dark"
+    );
   };
 
   // Run Code
@@ -96,7 +121,7 @@ export default function Home() {
 
       setStatus(data.status || "Unknown");
       setExecutionTime(data.time || "");
-      setMemory(data.memory || "");
+      setMemory(data.memory ?? "");
 
       setOutput(data.output || "No output");
 
@@ -122,7 +147,6 @@ export default function Home() {
       ? "text-red-400"
       : "text-gray-400";
 
-  // Status Background
   const statusBg =
     status === "Accepted"
       ? "bg-green-500/10 border-green-500/30"
@@ -135,12 +159,12 @@ export default function Home() {
       : "bg-gray-500/10 border-gray-500/30";
 
   return (
-    <main className="min-h-screen bg-[#0d1117] p-6">
+    <main className="min-h-screen bg-[#0d1117] p-3 sm:p-6">
 
       {/* Header */}
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">
             SajidX <span className="text-green-500">IDE</span>
           </h1>
 
@@ -149,25 +173,47 @@ export default function Home() {
           </p>
         </div>
 
-        <span className="rounded-full border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+        <span className="rounded-full border border-green-500/30 bg-green-500/10 px-3 py-2 text-xs text-green-400 sm:text-sm">
           Online C / C++ Compiler
         </span>
       </div>
 
       {/* Editor Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+
         <h2 className="text-lg font-semibold text-white">
           Code Editor
         </h2>
 
-        <select
-          value={language}
-          onChange={handleLanguageChange}
-          className="rounded-lg border border-gray-700 bg-[#161b22] px-4 py-2 text-white outline-none"
-        >
-          <option value="c">C</option>
-          <option value="cpp">C++</option>
-        </select>
+        <div className="flex flex-wrap gap-2">
+
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={handleLanguageChange}
+            className="rounded-lg border border-gray-700 bg-[#161b22] px-3 py-2 text-sm text-white outline-none"
+          >
+            <option value="c">C</option>
+            <option value="cpp">C++</option>
+          </select>
+
+          {/* Theme Button */}
+          <button
+            onClick={handleThemeChange}
+            className="rounded-lg border border-gray-700 bg-[#161b22] px-3 py-2 text-sm text-white transition hover:bg-gray-700"
+          >
+            {theme === "vs-dark" ? "☀ Light" : "☾ Dark"}
+          </button>
+
+          {/* Copy Code */}
+          <button
+            onClick={handleCopyCode}
+            className="rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
+          >
+            {copied ? "✓ Copied" : "Copy Code"}
+          </button>
+
+        </div>
       </div>
 
       {/* Code Editor */}
@@ -175,6 +221,11 @@ export default function Home() {
         language={language}
         code={code}
         onChange={(value) => setCode(value || "")}
+        theme={theme}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() =>
+          setIsFullscreen((previous) => !previous)
+        }
       />
 
       {/* Action Buttons */}
@@ -183,7 +234,7 @@ export default function Home() {
         <button
           onClick={handleRun}
           disabled={loading}
-          className="rounded-lg bg-green-600 px-6 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-green-600 px-5 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Running..." : "▶ Run Code"}
         </button>
@@ -191,14 +242,14 @@ export default function Home() {
         <button
           onClick={handleResetCode}
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-lg bg-blue-600 px-5 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
         >
           Reset Code
         </button>
 
         <button
           onClick={handleClearOutput}
-          className="rounded-lg bg-gray-700 px-6 py-2 font-semibold text-white transition hover:bg-gray-600"
+          className="rounded-lg bg-gray-700 px-5 py-2 font-semibold text-white transition hover:bg-gray-600"
         >
           Clear Output
         </button>
@@ -248,18 +299,14 @@ export default function Home() {
 
               {executionTime && (
                 <p>
-                  <span className="text-gray-200">
-                    Time:
-                  </span>{" "}
+                  <span className="text-gray-200">Time:</span>{" "}
                   {executionTime}s
                 </p>
               )}
 
               {memory !== "" && memory !== null && (
                 <p>
-                  <span className="text-gray-200">
-                    Memory:
-                  </span>{" "}
+                  <span className="text-gray-200">Memory:</span>{" "}
                   {memory} KB
                 </p>
               )}
